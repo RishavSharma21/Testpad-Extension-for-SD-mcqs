@@ -1,0 +1,7 @@
+# Local automation state files
+.todo_state.json
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+*.log
