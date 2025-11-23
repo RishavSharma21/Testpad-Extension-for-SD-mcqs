@@ -4,15 +4,16 @@
 
 const RUN_KEY = 'quizBotRunning';
 const STATE_KEY = 'quizBotQStateV2'; // per-question session state
-// Speed profiles (default fast)
-const SPEED = (localStorage.getItem('quizBotSpeed') || 'fast');
+// Speed profiles (default ultra-fast)
+const SPEED = (localStorage.getItem('quizBotSpeed') || 'ultra');
 const CONFIG = {
-  fast: { SHORT: 50, LOOP: 120, OBS: 1500 },
+  ultra: { SHORT: 0, LOOP: 50, OBS: 800 },
+  fast: { SHORT: 30, LOOP: 100, OBS: 1200 },
   normal: { SHORT: 120, LOOP: 300, OBS: 3000 }
 };
-const SHORT = (CONFIG[SPEED] || CONFIG.fast).SHORT;
-const LOOP_DELAY = (CONFIG[SPEED] || CONFIG.fast).LOOP;
-const OBS_TIMEOUT = (CONFIG[SPEED] || CONFIG.fast).OBS;
+const SHORT = (CONFIG[SPEED] || CONFIG.ultra).SHORT;
+const LOOP_DELAY = (CONFIG[SPEED] || CONFIG.ultra).LOOP;
+const OBS_TIMEOUT = (CONFIG[SPEED] || CONFIG.ultra).OBS;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const now = () => Date.now();
@@ -37,8 +38,8 @@ function isBanned(el){
 function safeClick(el){
   if(!el || !isVisible(el) || isBanned(el)) return false;
   try {
-    // Fast mode: minimal events for speed
-    if(SPEED === 'fast') {
+    // Ultra/fast modes: minimal events for speed
+    if(SPEED === 'ultra' || SPEED === 'fast') {
       el.click();
       return true;
     }
