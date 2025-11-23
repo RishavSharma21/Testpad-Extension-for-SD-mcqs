@@ -55,6 +55,3 @@ popup.js          # Popup logic sending control messages
 
 Pull requests are welcome. Please describe the scenario you are fixing or improving, add console/log screenshots if relevant, and ensure the extension still operates across consecutive questions.
 
-## License
-
-This project is released under the MIT License. See [`LICENSE`](LICENSE) for details (add one if required).
