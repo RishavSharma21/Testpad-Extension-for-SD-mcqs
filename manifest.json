@@ -3,7 +3,7 @@
   "name": "Quiz Auto-Solver",
   "version": "1.0",
   "description": "Automates selecting options, submitting, finding correct answers, and moving next.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_popup": "popup.html"
   },
@@ -13,4 +13,5 @@
       "js": ["content.js"]
     }
   ]
+  ,"host_permissions": ["<all_urls>"]
 }

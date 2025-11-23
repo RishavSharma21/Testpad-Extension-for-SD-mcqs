@@ -4,8 +4,15 @@
 
 const RUN_KEY = 'quizBotRunning';
 const STATE_KEY = 'quizBotQStateV2'; // per-question session state
-const OBS_TIMEOUT = 3000;
-const SHORT = 120;
+// Speed profiles (default fast)
+const SPEED = (localStorage.getItem('quizBotSpeed') || 'fast');
+const CONFIG = {
+  fast: { SHORT: 50, LOOP: 120, OBS: 1500 },
+  normal: { SHORT: 120, LOOP: 300, OBS: 3000 }
+};
+const SHORT = (CONFIG[SPEED] || CONFIG.fast).SHORT;
+const LOOP_DELAY = (CONFIG[SPEED] || CONFIG.fast).LOOP;
+const OBS_TIMEOUT = (CONFIG[SPEED] || CONFIG.fast).OBS;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const now = () => Date.now();
@@ -29,13 +36,18 @@ function isBanned(el){
 }
 function safeClick(el){
   if(!el || !isVisible(el) || isBanned(el)) return false;
-  try{
+  try {
+    // Fast mode: minimal events for speed
+    if(SPEED === 'fast') {
+      el.click();
+      return true;
+    }
     el.scrollIntoView({behavior:'auto', block:'center', inline:'center'});
     el.click();
     ['pointerdown','pointerup','mousedown','mouseup','click']
       .forEach(n => el.dispatchEvent(new MouseEvent(n,{bubbles:true, cancelable:true, view:window})));
     return true;
-  }catch(e){ return false; }
+  } catch(e){ return false; }
 }
 
 // ---------- Panel-scoped helpers ----------
@@ -299,12 +311,11 @@ async function handleQuestion(){
   }
   log('choosing longest option:', firstText);
   if(!firstRadio.checked){
-    safeClick(firstRadio);
     const cont = optionContainerForRadio(firstRadio, panel);
-    if(cont) safeClick(cont);
+    if(cont) safeClick(cont); else safeClick(firstRadio);
     firstRadio.checked = true;
     firstRadio.dispatchEvent(new Event('change',{bubbles:true}));
-    await sleep(SHORT);
+    if(SHORT) await sleep(SHORT);
   }
 
   // fill small texts inside panel
@@ -350,12 +361,11 @@ async function handleQuestion(){
 
   // else, select the correctRadio and re-submit, then Next
   log('selecting platform-correct option and re-submitting:', correctText);
-  safeClick(correctRadio);
   const cont2 = optionContainerForRadio(correctRadio,panel);
-  if(cont2) safeClick(cont2);
+  if(cont2) safeClick(cont2); else safeClick(correctRadio);
   correctRadio.checked = true;
   correctRadio.dispatchEvent(new Event('change',{bubbles:true}));
-  await sleep(SHORT);
+  if(SHORT) await sleep(SHORT);
 
   const submit2 = findSubmitInPanel(panel);
   if(submit2){ safeClick(submit2); await sleep(150); }
@@ -366,11 +376,15 @@ async function handleQuestion(){
 }
 
 // ---------- Loop controller ----------
+let loopRunning = false;
 async function loopWorker(){
+  if(loopRunning) return; // prevent parallel loops
+  loopRunning = true;
   while(localStorage.getItem(RUN_KEY) === 'true'){
-    try{ await handleQuestion(); }catch(e){ console.error('[quizBot] loop error', e); }
-    await sleep(300);
+    try { await handleQuestion(); } catch(e){ console.error('[quizBot] loop error', e); }
+    await sleep(LOOP_DELAY);
   }
+  loopRunning = false;
 }
 
 // ---------- Message interface ----------
@@ -383,6 +397,10 @@ chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListen
   } else if(req.action === 'stop_bot'){
     localStorage.setItem(RUN_KEY,'false');
     sendResp({ok:true});
+  } else if(req.action === 'get_status'){
+    sendResp({running: localStorage.getItem(RUN_KEY) === 'true'});
+  } else if(req.action === 'ping') {
+    sendResp({alive:true});
   }
   return true;
 });
