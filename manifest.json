@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Quiz Auto-Solver",
+  "version": "1.0",
+  "description": "Automates selecting options, submitting, finding correct answers, and moving next.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
